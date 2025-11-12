@@ -57,6 +57,7 @@ vim.opt.completeopt = { "menuone", "noselect", "popup" }
 -- But I think they're already async, it might just be eating processor time?
 -- TODO: leader commands to open diagnostics, and make sure diagnostic boxes have strong borders!
 -- Skim code for lsp plugins so I can figure out how to get diagnostic when files are first opened...
+-- TODO: set up keybinding subgroups, e.g. every binding related to LSPs starts with <Leader>l
 
 function TableDebug (tab)
     TableDebug_internal(tab, 0)
@@ -112,7 +113,7 @@ require("lazy").setup({
         { "rcarriga/nvim-notify" },
 
         -- Enable these as I learn to use them properly!
-        -- { "nvim-tree/nvim-tree.lua" },
+        { "nvim-tree/nvim-tree.lua", opts = {} },
         -- { "nvim-mini/mini.animate", version = "*" },
         -- { "stevearc/oil.nvim" },
         -- Telescope
@@ -197,6 +198,12 @@ vim.keymap.set(
     {"n", "v", "o"},
     "<Leader>r",
     "<Esc>ii<Esc>x"
+)
+
+vim.keymap.set(
+    {"n", "v", "o"},
+    "<Leader>t",
+    function() vim.cmd("NvimTreeOpen") end
 )
 
 -- Show diagnostics next to code
