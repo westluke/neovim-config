@@ -7,7 +7,7 @@ vim.g.maplocalleader = ","  -- forjfiletype-specific bindings
 -- Always enable signcolumn so it doesn't jump when entering/exiting insert,
 -- instead takes over line number
 vim.opt.signcolumn = "number"
- 
+
 -- Disable netrw as advised by vim tree
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -108,10 +108,7 @@ require("lazy").setup({
 	rocks = { enabled = false, hererocks = false },
 
         { "nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate" },
-        -- { "EdenEast/nightfox.nvim" },
-        -- { "rebelot/kanagawa.nvim" },
         { "scottmckendry/cyberdream.nvim" },
-        { "mason-org/mason.nvim", opts = {} }, -- For some reason the empty opts are required?
         { "rcarriga/nvim-notify" },
 
         -- Enable these as I learn to use them properly!
@@ -120,6 +117,7 @@ require("lazy").setup({
         -- { "stevearc/oil.nvim" },
         -- Telescope
 
+        require("mason_setup"),
         require("trouble_setup"),
         require("lspconfig_setup"),
         require("lualine_setup"),
@@ -138,7 +136,7 @@ vim.notify = require("notify")
 -- add fstar?
 -- nix
 -- lean4 not necessary, julian/lean.nvim should handle all that
-vim.lsp.enable({"lua_ls", "docker_language_server", "rust_analyzer", "pylsp", "typst_lsp", "clangd"})
+vim.lsp.enable({"lua_ls", "docker_language_server", "rust_analyzer", "pylsp", "clangd"})
 
 local function profile_start ()
     vim.cmd([[
@@ -205,3 +203,5 @@ vim.keymap.set(
 vim.diagnostic.config {
     virtual_text = true,
 }
+
+vim.opt.laststatus = 3
