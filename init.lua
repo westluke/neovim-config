@@ -111,6 +111,7 @@ require("lazy").setup({
 	rocks = { enabled = false, hererocks = false },
 
         require("plugins/mason_setup"),
+        require("plugins/blink_setup"),
 
         { "nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate" },
         { "scottmckendry/cyberdream.nvim" },
