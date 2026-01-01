@@ -2,7 +2,7 @@
 -- loading lazy.nvim so that mappings are correct.
 -- This is also a good place to setup other settings (vim.opt)
 vim.g.mapleader = " "
-vim.g.maplocalleader = ","  -- forjfiletype-specific bindings
+vim.g.maplocalleader = ","  -- for filetype-specific bindings
 
 -- Always enable signcolumn so it doesn't jump when entering/exiting insert,
 -- instead takes over line number
@@ -33,9 +33,6 @@ vim.opt.shiftwidth = 4
 vim.opt.softtabstop = -1    -- just use shiftwidth
 -- Note - tabstop still set at 8, in accordance with neovim suggestions
 
--- How does this actually work? Investigate
--- vim.opt.autocomplete = true
-
 -- Necessary for sharing with system clipboard
 vim.opt.clipboard = "unnamedplus"
 
@@ -45,8 +42,14 @@ vim.opt.ruler = true
 -- Adjust syntax based on detected filetype (i think?)
 vim.opt.syntax = "ON"
 
+-- Always give windows a status line, I think?
+vim.opt.laststatus = 2
+
 -- prevent the built-in vim.lsp.completion autotrigger from selecting the first item
 vim.opt.completeopt = { "menuone", "noselect", "popup" }
+
+-- How does this actually work? Investigate
+-- vim.opt.autocomplete = true
 
 -- TODO: Should bind something to `vim.opt.relativenumber = true`
 -- TODO: bind j/k to gj/gk
@@ -76,7 +79,7 @@ end
 
 -- If lazy.nvim is not present, clone it into standard data dir (.local/share/nvim)
 -- It would be nice if this could go in my config directory too, but neovim/lazy.nvim is pretty hardwired
--- around XDG directories.
+-- around XDG directories. Can just symlink this back to a controlled folder.
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
     local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -98,7 +101,6 @@ end
 -- is done.
 vim.opt.runtimepath:prepend(lazypath)
 
-
 -- Setup lazy.nvim
 require("lazy").setup({
     spec = {
@@ -107,6 +109,8 @@ require("lazy").setup({
 
 	-- disable support for luarocks so it stops bugging me in checkhealth
 	rocks = { enabled = false, hererocks = false },
+
+        require("plugins/mason_setup"),
 
         { "nvim-treesitter/nvim-treesitter", branch = 'master', lazy = false, build = ":TSUpdate" },
         { "scottmckendry/cyberdream.nvim" },
@@ -118,12 +122,11 @@ require("lazy").setup({
         -- { "stevearc/oil.nvim" },
         -- Telescope
 
-        require("mason_setup"),
-        require("trouble_setup"),
-        require("lspconfig_setup"),
-        require("lualine_setup"),
-        require("mini_clue_setup"),
-        require("lean_setup"),
+        -- require("plugins/trouble_setup"),
+        require("plugins/lspconfig_setup"),
+        require("plugins/lualine_setup"),
+        require("plugins/mini_clue_setup"),
+        require("plugins/lean_setup"),
     },
 })
 
@@ -131,65 +134,22 @@ vim.cmd([[
    colorscheme cyberdream
 ]])
 
+-- Necessary for notifications to work for some reason?
 vim.notify = require("notify")
 
--- vim.lsp.config('lua-language-server')
--- add fstar?
--- nix
 -- lean4 not necessary, julian/lean.nvim should handle all that
 vim.lsp.enable({"lua_ls", "docker_language_server", "rust_analyzer", "pylsp", "clangd"})
 
-local function profile_start ()
-    vim.cmd([[
-        profile start ~/profile.log
-        profile func *
-        profile file *
-    ]])
-end
+-- Make lsp stop bugging me when I'm editing neovim config
+vim.lsp.config("lua_ls", {settings={Lua={diagnostics={globals={"vim"}}}}})
 
-local function profile_end ()
-    vim.cmd([[
-        profile pause
-    ]])
-end
+-- Show diagnostics next to code
+vim.diagnostic.config {
+    virtual_text = true,
+}
 
-local function toggle_diagnostics()
-    vim.diagnostic.enable(
-        not vim.diagnostic.is_enabled({bufnr = 0}),
-        {bufnr = 0}
-    )
-end
-
-vim.keymap.set(
-    {"n", "v", "o"},
-    "<Leader>p",
-    profile_start
-)
-
-vim.keymap.set(
-    {"n", "v", "o"},
-    "<Leader>e",
-    profile_end
-)
-
--- Toggle diagnostics display
-vim.keymap.set(
-    {"n", "v", "o"},
-    "<Leader>b",
-    toggle_diagnostics
-)
-
-vim.keymap.set(
-    {"n", "v", "o"},
-    "j",
-    "gj"
-)
-
-vim.keymap.set(
-    {"n", "v", "o"},
-    "k",
-    "gk"
-)
+vim.keymap.set({"n", "v", "o"}, "j", "gj")
+vim.keymap.set({"n", "v", "o"}, "k", "gk")
 
 -- EXTREMELY hacky workaround for diagnostics not showing up immediately sometimes
 -- Just makes an edit and immediately reverts it, triggering the diagnostics showing up
@@ -206,9 +166,17 @@ vim.keymap.set(
     function() vim.cmd("NvimTreeOpen") end
 )
 
--- Show diagnostics next to code
-vim.diagnostic.config {
-    virtual_text = true,
-}
+vim.lsp.config(
+    'rust_analyzer', {
+        on_attach = function(client, bufnr)
+            vim.lsp.completion.enable(true, client.id, bufnr, {
+                autotrigger = true,
+                convert = function(item)
+                    return { abbr = item.label:gsub('%b()', '') }
+                end,
+            })
+        end,
+    })
 
-vim.opt.laststatus = 3
+-- as-needed modules should probably get loaded last
+-- require("as-needed/profile")
